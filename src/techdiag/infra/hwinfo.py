@@ -113,6 +113,54 @@ def prepare_ini(exe: Path) -> bool:
     return False
 
 
+class _ElevatedProc:
+    """Processo iniciado via ShellExecuteEx 'runas' (usado quando o CreateProcess falha com erro 740)."""
+
+    def __init__(self, handle):
+        self.h = handle
+
+    def terminate(self):
+        import ctypes
+        ctypes.windll.kernel32.TerminateProcess(self.h, 0)    # pode ser negado se nao estivermos elevados: ignorado
+
+    def wait(self, timeout=None):
+        import ctypes
+        ctypes.windll.kernel32.WaitForSingleObject(self.h, int((timeout or 5) * 1000))
+        ctypes.windll.kernel32.CloseHandle(self.h)
+
+
+def _launch_elevated(exe: Path):
+    import ctypes
+    from ctypes import wintypes
+
+    class SEI(ctypes.Structure):
+        _fields_ = [("cbSize", wintypes.DWORD), ("fMask", ctypes.c_ulong), ("hwnd", wintypes.HWND), ("lpVerb", wintypes.LPCWSTR),
+                    ("lpFile", wintypes.LPCWSTR), ("lpParameters", wintypes.LPCWSTR), ("lpDirectory", wintypes.LPCWSTR),
+                    ("nShow", ctypes.c_int), ("hInstApp", wintypes.HINSTANCE), ("lpIDList", ctypes.c_void_p),
+                    ("lpClass", wintypes.LPCWSTR), ("hkeyClass", wintypes.HKEY), ("dwHotKey", wintypes.DWORD),
+                    ("hIconOrMonitor", wintypes.HANDLE), ("hProcess", wintypes.HANDLE)]
+    info = SEI()
+    info.cbSize = ctypes.sizeof(SEI)
+    info.fMask = 0x40                                      # SEE_MASK_NOCLOSEPROCESS
+    info.lpVerb, info.lpFile, info.lpDirectory, info.nShow = "runas", str(exe), str(exe.parent), 7
+    if not ctypes.windll.shell32.ShellExecuteExW(ctypes.byref(info)):
+        raise HwinfoUnavailable("Elevação do HWiNFO cancelada ou negada. Execute o TechDiag como administrador.")
+    return _ElevatedProc(info.hProcess)
+
+
+def launch(exe: Path, popen=subprocess.Popen, elevated=_launch_elevated):
+    """Inicia o HWiNFO minimizado. O HWiNFO exige elevacao: se o CreateProcess falhar com 740, usa 'runas'."""
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = 7                                     # SW_SHOWMINNOACTIVE
+    try:
+        return popen([str(exe)], cwd=str(exe.parent), startupinfo=si, close_fds=True)
+    except OSError as e:
+        if getattr(e, "winerror", None) == 740:
+            return elevated(exe)
+        raise HwinfoUnavailable(f"Não foi possível iniciar o HWiNFO: {e}") from e
+
+
 def collect(exe: Path | None, timeout: int = 40, settle: float = 6.0):
     """Retorna (snapshot, processo). processo != None quando NOS iniciamos o HWiNFO (quem chama deve chamar stop())."""
     try:
@@ -124,10 +172,7 @@ def collect(exe: Path | None, timeout: int = 40, settle: float = 6.0):
     if exe is None:
         raise HwinfoUnavailable("HWiNFO64.exe não encontrado na pasta tools.")
     prepare_ini(exe)
-    si = subprocess.STARTUPINFO()
-    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-    si.wShowWindow = 7                                     # SW_SHOWMINNOACTIVE
-    proc = subprocess.Popen([str(exe)], cwd=str(exe.parent), startupinfo=si, close_fds=True)
+    proc = launch(exe)
     try:
         t0, last = time.time(), None
         while time.time() - t0 < timeout:

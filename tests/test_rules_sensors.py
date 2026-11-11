@@ -141,3 +141,22 @@ def test_sensors_collector_reports_reason_without_windows():
     from techdiag.core.models import Context
     r = SensorsCollector().execute(Context())
     assert r.status == Status.ERROR and r.reason
+
+
+def test_launch_falls_back_to_runas_on_error_740(tmp_path, monkeypatch):
+    import subprocess
+    monkeypatch.setattr(subprocess, "STARTUPINFO", lambda: type("SI", (), {"dwFlags": 0})(), raising=False)
+    monkeypatch.setattr(subprocess, "STARTF_USESHOWWINDOW", 1, raising=False)
+    exe = tmp_path / "HWiNFO64.exe"
+
+    def need_elevation(*a, **k):
+        e = OSError(740, "A operação solicitada requer elevação")
+        e.winerror = 740
+        raise e
+    sentinel = object()
+    assert hwinfo.launch(exe, popen=need_elevation, elevated=lambda p: sentinel) is sentinel
+
+    def other(*a, **k):
+        raise OSError(2, "nao encontrado")
+    with pytest.raises(hwinfo.HwinfoUnavailable):          # qualquer outro erro vira mensagem clara, nunca "falha inesperada"
+        hwinfo.launch(exe, popen=other)
