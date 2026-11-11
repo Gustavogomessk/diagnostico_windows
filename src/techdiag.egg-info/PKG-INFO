@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: techdiag
+Version: 1.0.0
+Summary: Diagnostico e laudo tecnico para computadores Windows
+Requires-Python: >=3.10

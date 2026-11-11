@@ -1,0 +1,9 @@
+Coloque aqui os executaveis das ferramentas externas (nomes exatos):
+
+  RAMMap64.exe (ou RAMMap.exe)   - Sysinternals RAMMap
+  BlueScreenView.exe             - NirSoft BlueScreenView
+  speedtest.exe                  - Ookla Speedtest CLI
+
+Subpastas de primeiro nivel tambem sao aceitas (ex.: tools\ookla\speedtest.exe).
+O programa procura em: tools\ ao lado do .exe, resources\tools\ e na pasta embutida no executavel.
+Em Configuracoes > "Verificar ferramentas" voce ve caminho, assinatura digital e SHA-256 de cada uma.

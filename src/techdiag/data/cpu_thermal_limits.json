@@ -1,0 +1,26 @@
+{
+  "descricao": "Limites termicos de processadores segundo documentacao oficial dos fabricantes. Para acrescentar modelos, copie este arquivo para %APPDATA%\\TechDiag\\cpu_thermal_limits.json e inclua entradas em 'modelos' (tem prioridade sobre este arquivo).",
+  "consultado_em": "2026-11-10",
+  "modelos": [
+    {"fabricante": "AMD", "modelo": "Ryzen 5 5600X", "limite_c": 95, "tipo": "Tjmax", "confianca": "exato",
+     "fonte": "AMD - ficha do Ryzen 5 5600X (Max. Operating Temperature)",
+     "url": "https://www.amd.com/en/products/processors/desktops/ryzen/5000-series/amd-ryzen-5-5600x.html"},
+    {"fabricante": "AMD", "modelo": "Ryzen 5 5500H", "limite_c": 105, "tipo": "Tjmax", "confianca": "exato",
+     "fonte": "AMD - ficha do Ryzen 5 5500H (Max. Operating Temperature)",
+     "url": "https://www.amd.com/en/support/downloads/drivers.html/processors/ryzen/ryzen-5000-series/amd-ryzen-5-5500h.html"},
+    {"fabricante": "AMD", "modelo": "Ryzen 5 5600", "limite_c": 90, "tipo": "Tjmax", "confianca": "secundaria",
+     "fonte": "Ficha AMD do Ryzen 5 5600 (reproduzida por terceiros; confirmar no site da AMD)", "url": null},
+    {"fabricante": "AMD", "modelo": "Ryzen 7 5700X", "limite_c": 90, "tipo": "Tjmax", "confianca": "secundaria",
+     "fonte": "Ficha AMD do Ryzen 7 5700X (reproduzida por terceiros; confirmar no site da AMD)", "url": null},
+    {"fabricante": "AMD", "modelo": "Ryzen 5 5500U", "limite_c": 105, "tipo": "Tjmax", "confianca": "secundaria",
+     "fonte": "Dados publicados por terceiros; confirmar na ficha oficial da AMD", "url": null}
+  ],
+  "regras": [
+    {"fabricante": "Intel", "familia": "intel_core_i", "geracao_min": 6, "geracao_max": 14, "limite_c": 100, "tipo": "Tjunction",
+     "confianca": "familia",
+     "fonte": "Intel ARK - TJUNCTION de 100 C nas fichas conferidas (i5-7200U, i5-8400, i5-12400F). A Intel informa que o limite varia por produto (em geral 100-110 C)",
+     "url": "https://www.intel.com/content/www/us/en/support/articles/000005597/processors.html",
+     "fontes": ["https://www.intel.com/content/www/us/en/products/sku/126687/intel-core-i58400-processor-9m-cache-up-to-4-00-ghz/specifications.html",
+                "https://www.intel.com/content/www/us/en/products/sku/134587/specifications.html"]}
+  ]
+}
